@@ -8,6 +8,8 @@ from app.main.forms import LoginForm, RegisterForm, SendResetPasswordRequestForm
 from app.main.email import send_password_reset_email
 from app.main.model import User
 from . import main
+from app import socketio 
+from app.main.chat_events import users
 
 @main.route('/')
 @main.route('/index')
@@ -17,7 +19,7 @@ def index():
     return render_template('index.html')
 
 
-
+users = []
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -34,12 +36,18 @@ def login():
         user = User.query.filter_by(username=username).first()
         if bcrypt.check_password_hash(user.password, password):
             login_user(user, remember=remember)
-            # return redirect(request.args.get('next') or url_for('main.index'))
-            return render_template('chat.html',form = form)
+            return redirect(url_for('main.chat'))
         else:
             flash('Password incorrect', category='danger')
     
     return render_template('login.html',form = form)
+
+
+
+@main.route('/chat')
+def chat():
+    print('Routing to chat template, users = '+str(users))
+    return render_template('chat.html',users = users)
 
 @main.route('/logout')
 def logout():

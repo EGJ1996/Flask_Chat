@@ -1,1 +1,1 @@
-# flask-user-auth-example
+Flask Chat Application
