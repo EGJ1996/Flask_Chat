@@ -41,7 +41,7 @@
 
             socketio.on('connect', function() {
                     console.log('socket connected');
-                    socketio.emit('joined', {});
+                    socketio.emit('connected')
             });
 
             // join a room
@@ -55,9 +55,21 @@
               return false;
             });
 
-            socketio.on("display_users",function(data){
-              console.log('display_users invoked');
-              socketio.emit('display_users',{users:data['users']})
+            socketio.on("update_users",function(data){
+              console.log('update_users called');
+              console.log(data);
+              usr = data['users'];
+              var content = '';
+              var i;
+              
+              for(i=0;i<usr.length;i++){
+                // content += '<p>'+usr[i]+'</p>';
+                content += "<div id='sidebar-user-box'><span class='collection-item' id='slider-username'>"+usr[i]+'</span></div><br>';
+              }
+
+              console.log('content = '+content);
+              $('#origins-list').html(content);
+
             });
 
             socketio.on('join',function(){
@@ -65,23 +77,26 @@
             });
 
             $("#send").click(function(event){
-              msg = $("message").val();
-              user_name = $("current_user").val();
-              socketio.emit("send_message",{user:user_name,message:msg});
+              console.log('message button clicked')
+              var msg = $("#message").val();
+              $('#message').val('');
+              console.log('msg = '+msg);
+              user_name = $("#current_user").text();
+              user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
+              // $('#chat-messages').append("<p>"+user_name+":"+msg+"</p> \n");
+              socketio.emit("add_message",{user:user_name,message:msg});
             });
 
-            socketio.on('display_users',function(data){
-              var us="";
+            socketio.on('update_messages',function(data){
+              console.log('update-messages invoked');
+              console.log(data['messages']);
+              msgs = data['messages'];
               var i;
-              console.log(data);
-              var users1 = data['users'];
-              console.log(users1);
-              for(i=0;i<users1.length;i++){
-                us += '<p>'+users1[i]+'</p> \n';
+              content = '';
+              for(i=0;i<msgs.length;i++){
+                content += "<p><b>"+msgs[i]['user']+"</b>:"+msgs[i]['message']+"</p><br>"
               }
-              console.log('us = '+us);
-              $('#slider-username').html(us);
-              // console.log(this.users)
+              $('#chat-messages').html(content);
             });
         });
     </script>
@@ -129,8 +144,7 @@
               <div id="origins-list" class="card-content" v-html="chatContent">
                 <!-- <div class="user_name"></div> -->
                 <div id="origins-list" class="card-content">
-                  <div id="sidebar-user-box"><span class="collection-item"
-                      id="slider-username"></span></div>
+                  
                   </div>
               </div>
             </div>

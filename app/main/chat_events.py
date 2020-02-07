@@ -4,7 +4,7 @@ from app import socketio
 
 users = []
 user_presence = {}
-all_chats = {}
+all_chats = []
 
 # Only 1 channel implemented currently. Different channels may be implemented by having different rooms
 
@@ -15,28 +15,37 @@ def index():
 
 @socketio.on('joined')
 def joined(data):
-    print("join event called from chat_events")
     # print("data keys = "+str(data.keys()))
     user_name = data['user'][5:]
+    print("join event called from chat_events with user = "+str(data))
 
     if(user_name not in list(user_presence.keys())):
         users.append(user_name)
         user_presence[user_name] = True
     print("length of users = "+str(len(users)))
 
-    emit("display_users",{'users':users})
+    # join_room(room)
+    emit("update_users",{'users':users},room=room)
+
+@socketio.on('connected')
+def connected():
+    print('called connected')
+    join_room(room)
+    emit("update_users",{'users':users})
+
+@socketio.on('add_message')
+def add_message(data):
+    # data stores the username and the content of each received message
+    print('invoked add_message event with data = '+str(data))
+    all_chats.append(data)
+    print('all_chats = '+str(all_chats))
+    emit('update_messages',{'messages':all_chats},room=room)
 
 
 
 @socketio.on('connect')
 def connect():
     print('caught the connect event')
-
-@socketio.on('send_message')
-def add_message(data):
-    if(all_chats[data["user"]] is None):
-        all_chats[data["user"]] = []
-        all_chats[data["user"]].append(data["message"])
 
 
 @socketio.on('my_event')

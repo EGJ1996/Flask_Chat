@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template
-from flask_login import login_required
+from flask import Blueprint, render_template,session
+from flask_login import login_required, fresh_login_required
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_user, logout_user, current_user
 
@@ -11,20 +11,20 @@ from . import main
 from app import socketio 
 from app.main.chat_events import users
 
-@main.route('/')
-@main.route('/index')
+@main.route('/')   
+@main.route('/index',methods=['GET','POST'])
 @login_required
 def index():
+    logout_user()
     print("Inside index")
     return render_template('index.html')
 
 
-users = []
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         print("current user is authenticated")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.login'))
     
 
     form = LoginForm(request.form)
@@ -36,7 +36,8 @@ def login():
         user = User.query.filter_by(username=username).first()
         if bcrypt.check_password_hash(user.password, password):
             login_user(user, remember=remember)
-            return redirect(url_for('main.chat'))
+            # return redirect(url_for('main.chat'))
+            return render_template('chat.html')
         else:
             flash('Password incorrect', category='danger')
     
@@ -69,7 +70,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash('Congrats, register success. You can log in now.', category='info')
-        return redirect(url_for('login.html'))
+        return redirect(url_for('main.login'))
     return render_template('register.html', form=form)
 
 
