@@ -28,12 +28,8 @@
 
     <script type="text/javascript" charset="utf-8">
         var socketio;
+        var activeChat;
         $(document).ready(function(){
-            // Use a "/test" namespace.
-            // An application can open a connection on multiple namespaces, and
-            // Socket.IO will multiplex all those connections on a single
-            // physical channel. If you don't care about multiple channels, you
-            // can set the namespace to an empty string.
             namespace = '';
             // socket_connection = 'http://' + document.domain + ':' + location.port+'/'+namespace;
             // socketio = io.connect(socket_connection);
@@ -41,17 +37,22 @@
 
             socketio.on('connect', function() {
                     console.log('socket connected');
-                    socketio.emit('connected')
+                    user_name = $("#current_user").text();
+                    user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
+                    console.log('username = '+user_name);
+                    socketio.emit('connected',{current_user:user_name});
+                    activeChat = 'group';
             });
+
+            // The active chat will firstly be the group chat
 
             // join a room
             $('#join').click(function(event){
               console.log("join event called")
               user_name = $("#current_user").text();
-              console.log('Before emitting');
               user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">"));
+              console.log('user_name = '+user_name);  
               socketio.emit('joined',{user:user_name});
-              console.log('After emitting');
               return false;
             });
 
@@ -59,7 +60,7 @@
               console.log('update_users called');
               console.log(data);
               usr = data['users'];
-              var content = '';
+              var content = "<div id='sidebar-user-box'><span class='collection-item' id='slider-username'>public chat</span></div><br>";
               var i;
               
               for(i=0;i<usr.length;i++){
@@ -67,9 +68,30 @@
                 content += "<div id='sidebar-user-box'><span class='collection-item' id='slider-username'>"+usr[i]+'</span></div><br>';
               }
 
+              $(document).on('click', '#sidebar-user-box', function (e) {
+                console.log(e.target.innerText);
+                console.log('onclick event invoked');
+                e.preventDefault();
+                activeChat = e.target.innerText;
+                console.log('activeChat = '+activeChat);
+                if(activeChat == 'public chat'){
+                  console.log('Inside if');
+                  activeChat = 'group';
+                }
+                user_name = $("#current_user").text();
+                user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
+                socketio.emit('update_chat',{destination:activeChat,origin:user_name});
+              });
               console.log('content = '+content);
               $('#origins-list').html(content);
+              
+            });
 
+            $(document).on('click', '#sidebar-user-box', function (e) {
+              console.log(e.target.innerText);
+              console.log('onclick event invoked');
+              e.preventDefault();
+              activeChat = e.target.innerText;
             });
 
             socketio.on('join',function(){
@@ -78,25 +100,29 @@
 
             $("#send").click(function(event){
               console.log('message button clicked')
+              console.log('active chat = '+activeChat);
               var msg = $("#message").val();
               $('#message').val('');
-              console.log('msg = '+msg);
+              console.log('msg = ' + msg);
               user_name = $("#current_user").text();
               user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
               // $('#chat-messages').append("<p>"+user_name+":"+msg+"</p> \n");
-              socketio.emit("add_message",{user:user_name,message:msg});
+              socketio.emit("add_message",{origin:user_name,message:msg,destination:activeChat});
             });
 
             socketio.on('update_messages',function(data){
-              console.log('update-messages invoked');
+              console.log('update_messages called')
               console.log(data['messages']);
               msgs = data['messages'];
               var i;
               content = '';
               for(i=0;i<msgs.length;i++){
-                content += "<p><b>"+msgs[i]['user']+"</b>:"+msgs[i]['message']+"</p><br>"
+                content += "<p><b>"+msgs[i]['origin']+"</b>: "+msgs[i]['message']+"</p><br>"
               }
               $('#chat-messages').html(content);
+              var element = document.getElementById('chat-messages');
+              // scroll to the bottom
+              element.scrollTop = element.scrollHeight;
             });
         });
     </script>

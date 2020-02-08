@@ -4,11 +4,14 @@ from app import socketio
 
 users = []
 user_presence = {}
-all_chats = []
+all_rooms = []
+all_chats = {}
 
 # Only 1 channel implemented currently. Different channels may be implemented by having different rooms
 
-room = "room1"
+
+all_chats['group'] = []
+all_rooms.append('group')
 
 def index():
     return redirect(url_for('main.index'))
@@ -19,29 +22,71 @@ def joined(data):
     user_name = data['user'][5:]
     print("join event called from chat_events with user = "+str(data))
 
+    print('current_user = '+session['user']+" username = "+user_name)
     if(user_name not in list(user_presence.keys())):
         users.append(user_name)
-        user_presence[user_name] = True
+        user_presence[user_name] = True    
     print("length of users = "+str(len(users)))
 
     # join_room(room)
-    emit("update_users",{'users':users},room=room)
+    emit("update_users",{'users':users},room=session['room'])
 
 @socketio.on('connected')
-def connected():
-    print('called connected')
-    join_room(room)
+def connected(data):
+    session['room'] = 'group'
+    print('called connected with room = '+session['room'])
+    join_room(session['room'])
     emit("update_users",{'users':users})
+    emit('update_messages',{'messages':all_chats['group']})
 
 @socketio.on('add_message')
 def add_message(data):
-    # data stores the username and the content of each received message
-    print('invoked add_message event with data = '+str(data))
-    all_chats.append(data)
-    print('all_chats = '+str(all_chats))
-    emit('update_messages',{'messages':all_chats},room=room)
+    
+    print('add_message invoked with '+str(data))
+    
+    if(data['destination'] == 'group'):
+        # Case 1: We are writing to the public group
+        all_chats['group'].append({'message':data['message'],'origin':data['origin']})
+        emit('update_messages',{'messages':all_chats['group']},room='group')
+    
+    else:
+        # Case 2: 
+        all_chats[session['room']].append({'message':data['message'],'origin':data['origin']})
+        print('room = '+session['room'])
+        emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
 
+@socketio.on('update_chat')
+def update_chat(data):
 
+    if(session['user'] != data['origin']):
+        return
+    
+    if(data['destination'] == 'group'):
+        session['room'] = 'group'
+    
+    else:    
+        tmp_arr = [data['origin'],data['destination']]
+        tmp_arr.sort()
+        new_room = ''.join(tmp_arr)
+        print('Changing the room to ' + new_room)
+
+        # join the new room
+        if(new_room != session['room']):
+            print('joining room')
+            # print('leaving room')
+            session['room'] = new_room
+            # leave_room(room)
+            join_room(new_room)
+        
+        if(session['room'] not in all_rooms):
+            all_chats[session['room']] = []
+            all_rooms.append(session['room'])
+    
+    print('room = '+session['room'])
+    emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
+    # emit('update_messages',{'messages':all_chats[new_room]},room=room)
+
+    
 
 @socketio.on('connect')
 def connect():

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template,session
 from flask_login import login_required, fresh_login_required
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_user, logout_user, current_user
-
+from flask import session
 from app import bcrypt, db
 from app.main.forms import LoginForm, RegisterForm, SendResetPasswordRequestForm, ResetPasswordForm
 from app.main.email import send_password_reset_email
@@ -12,7 +12,8 @@ from app import socketio
 from app.main.chat_events import users
 
 @main.route('/')   
-@main.route('/index',methods=['GET','POST'])
+# @main.route('/index',methods=['GET','POST'])
+@main.route('/index')
 @login_required
 def index():
     logout_user()
@@ -22,15 +23,17 @@ def index():
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        print("current user is authenticated")
-        return redirect(url_for('main.login'))
+    # if current_user.is_authenticated:
+    #     print("current user is authenticated")
+    #     return redirect(url_for('main.index'))
     
 
     form = LoginForm(request.form)
     if form.validate_on_submit():
         print("form validated")
         username = form.username.data
+        session['user'] = username
+        session['active_chat'] = 'group'
         password = form.password.data
         remember = form.remember.data
         user = User.query.filter_by(username=username).first()
