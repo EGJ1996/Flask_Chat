@@ -83,6 +83,8 @@ def update_chat(data):
             all_rooms.append(session['room'])
     
     print('room = '+session['room'])
+    print('chats of room = ')
+    print(all_chats[session['room']])
     emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
     # emit('update_messages',{'messages':all_chats[new_room]},room=room)
 

@@ -19,11 +19,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.6/assets/css/emojione.min.css" />
   <link href="{{ url_for('static', filename='css/chat_style.css') }}" rel="stylesheet">
+
   {%- endblock styles %}
 
 
     <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>    
+    <script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
     <!-- <script src="{{url_for('static',filename='js/socket.js')}}"></script> -->
 
     <script type="text/javascript" charset="utf-8">
@@ -65,7 +67,11 @@
               
               for(i=0;i<usr.length;i++){
                 // content += '<p>'+usr[i]+'</p>';
-                content += "<div id='sidebar-user-box'><span class='collection-item' id='slider-username'>"+usr[i]+'</span></div><br>';
+                content += "<div id='sidebar-user-box'><span class='collection-item' id='slider-username'>"
+                  + "<div class = 'chip'>"
+                    + "<img src='https://img.icons8.com/color/48/000000/online.png'>" // Avatar 
+                    +usr[i] + "</div>"
+                  +'</span></div><br>';
               }
 
               $(document).on('click', '#sidebar-user-box', function (e) {
@@ -111,14 +117,29 @@
             });
 
             socketio.on('update_messages',function(data){
-              console.log('update_messages called')
-              console.log(data['messages']);
               msgs = data['messages'];
               var i;
-              content = '';
+              var content = '';
+              user_name = $("#current_user").text();
+              user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
+
               for(i=0;i<msgs.length;i++){
-                content += "<p><b>"+msgs[i]['origin']+"</b>: "+msgs[i]['message']+"</p><br>"
+
+                var tmpMsg = '<div class="chip" style="margin-left:5px">'+ msgs[i]['origin'] + ': </div>'
+
+                console.log('printing message = ');
+                console.log(emojione.toImage(msgs[i]['message']));
+                
+                if(user_name == msgs[i]['origin']){
+                  content += '<div style="float:right;clear:both;display:table;">'
+                  + tmpMsg + emojione.toImage(msgs[i]['message']) + '</div><br/>'
+                  }
+                else{
+                  content += '<div>'+tmpMsg + emojione.toImage(msgs[i]['message'])+'</div><br/>';
+                }
               }
+              console.log('content = '+content);
+
               $('#chat-messages').html(content);
               var element = document.getElementById('chat-messages');
               // scroll to the bottom
@@ -130,14 +151,14 @@
   {%- endblock head %}
 </head>
 
-<body>
+<body style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;">
   <header>
     <nav class="navbar navbar-expand-sm navbar-dark" style="background-color: #274e68;">
       <div class="container">
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">Website</a>
+        <!-- <a class="navbar-brand" href="{{ url_for('main.index') }}">Website</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav">
         <span class="navbar-toggler-icon"></span>
-        </button>
+        </button> -->
         <div class="collapse navbar-collapse" id="nav">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item {% if request.path == url_for('main.index') %}active{% endif %}">
@@ -188,10 +209,10 @@
         
         {% endblock %} -->
           
-
+<!-- 
           <div class="input-field col s8">
             <input type="text" v-model.trim="username" placeholder="Username">
-          </div> 
+          </div>  -->
           
         <div class="input-field col s2">
             <button class="waves-effect waves-light btn" id = "join">
