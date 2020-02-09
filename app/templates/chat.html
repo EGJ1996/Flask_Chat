@@ -31,6 +31,11 @@
     <script type="text/javascript" charset="utf-8">
         var socketio;
         var activeChat;
+        var sentiments = {
+          "positive" : "😄",
+          "negative" : "🙁",
+          "neutral" : "😐"
+        }
         $(document).ready(function(){
             namespace = '';
             // socket_connection = 'http://' + document.domain + ':' + location.port+'/'+namespace;
@@ -124,20 +129,27 @@
               user_name = user_name.substring(user_name.lastIndexOf("<")+1,user_name.lastIndexOf(">")).substring(5,user_name.length);
 
               for(i=0;i<msgs.length;i++){
-
-                var tmpMsg = '<div class="chip" style="margin-left:5px">'+ msgs[i]['origin'] + ': </div>'
-
+                console.log('printing message');
+                console.log(msgs[i])
+                var tmpMsg = '<div class="chip">'+ msgs[i]['origin'] + ': </div>';
+                var sentiment = msgs[i]['sentiment'];
+                // console.log('sentiment = '+sentiment);
+                
                 console.log('printing message = ');
                 console.log(emojione.toImage(msgs[i]['message']));
                 
                 if(user_name == msgs[i]['origin']){
                   content += '<div style="float:right;clear:both;display:table;">'
-                  + tmpMsg + emojione.toImage(msgs[i]['message']) + '</div><br/>'
+                  + tmpMsg + msgs[i]['message'] + '</div>';
+                  content += '<div style="float:left;">'+sentiments[sentiment]+'</div><br/>';
                   }
+
                 else{
-                  content += '<div>'+tmpMsg + emojione.toImage(msgs[i]['message'])+'</div><br/>';
+                  content += '<div style="float:left;display:table;clear:both;">'+tmpMsg + msgs[i]['message'] +'</div>';
+                  content += '<div style="float:right;">'+sentiments[sentiment]+'</div><br/>'
                 }
               }
+
               console.log('content = '+content);
 
               $('#chat-messages').html(content);
@@ -149,9 +161,12 @@
     </script>
 
   {%- endblock head %}
+
 </head>
 
 <body style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;">
+
+  
   <header>
     <nav class="navbar navbar-expand-sm navbar-dark" style="background-color: #274e68;">
       <div class="container">
@@ -185,11 +200,14 @@
 
   </header>
   <main id="app">
+    
+  
     <div class="row">
           <div class="col s6">
             <div class="card horizontal">
               <div id="origins-list" class="card-content" v-html="chatContent">
                 <!-- <div class="user_name"></div> -->
+                
                 <div id="origins-list" class="card-content">
                   
                   </div>

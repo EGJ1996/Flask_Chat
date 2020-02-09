@@ -1,13 +1,15 @@
 from flask import Flask, redirect, session, request,copy_current_request_context,url_for
 from flask_socketio import  emit, join_room, leave_room,close_room, rooms, disconnect
 from app import socketio
+from aylienapiclient import textapi # Sentiment Analysis API
+
+client = textapi.Client("0f213eed", "9202426a61973183055e9041d1333a07")
 
 users = []
 user_presence = {}
 all_rooms = []
 all_chats = {}
 
-# Only 1 channel implemented currently. Different channels may be implemented by having different rooms
 
 
 all_chats['group'] = []
@@ -43,15 +45,17 @@ def connected(data):
 def add_message(data):
     
     print('add_message invoked with '+str(data))
-    
+    sentiment = client.Sentiment({'text': data['message']})
+    print('tone analyzer = ' + sentiment['polarity'])
+
     if(data['destination'] == 'group'):
         # Case 1: We are writing to the public group
-        all_chats['group'].append({'message':data['message'],'origin':data['origin']})
+        all_chats['group'].append({'message':data['message'],'origin':data['origin'],'sentiment':sentiment['polarity']})
         emit('update_messages',{'messages':all_chats['group']},room='group')
     
     else:
         # Case 2: 
-        all_chats[session['room']].append({'message':data['message'],'origin':data['origin']})
+        all_chats[session['room']].append({'message':data['message'],'origin':data['origin'],'sentiment':sentiment['polarity']})
         print('room = '+session['room'])
         emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
 
