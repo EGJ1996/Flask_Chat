@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template,session
+from flask import Blueprint, render_template,session, Response, jsonify
 from flask_login import login_required, fresh_login_required
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_user, logout_user, current_user
@@ -8,8 +8,16 @@ from app.main.forms import LoginForm, RegisterForm, SendResetPasswordRequestForm
 from app.main.email import send_password_reset_email
 from app.main.model import User
 from . import main
-from app import socketio 
+from app import socketio
 from app.main.chat_events import users
+from app.main.camera import VideoStreamWidget
+import cv2
+import json
+import time
+import jsonpickle
+# from server import cam
+
+cam = None
 
 @main.route('/')   
 # @main.route('/index',methods=['GET','POST'])
@@ -21,13 +29,15 @@ def index():
     return render_template('index.html')
 
 
+
+                      
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     # if current_user.is_authenticated:
     #     print("current user is authenticated")
     #     return redirect(url_for('main.index'))
     
-
+    
     form = LoginForm(request.form)
     if form.validate_on_submit():
         print("form validated")
@@ -50,6 +60,7 @@ def login():
 
 @main.route('/chat')
 def chat():
+    
     print('Routing to chat template, users = '+str(users))
     return render_template('chat.html',users = users)
 
@@ -103,3 +114,29 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
+
+def gen_frame():
+    """Video streaming generator function."""
+    print('before while loop')
+    print('cam = '+str(cam))
+    while cam:
+        print('inside while loop of gen_frame')
+        frame = cam.read()
+        print('frame in routes = '+str(frame))
+        convert = cv2.imencode('.jpg', frame)[1].tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result
+        time.sleep(0.01)
+
+
+@main.route('/video_feed')
+def video_feed():
+    print('Inside video feed')
+    global cam
+    if(cam is None):
+        cam = VideoStreamWidget()
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen_frame(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+

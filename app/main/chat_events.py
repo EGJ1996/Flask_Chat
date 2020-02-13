@@ -1,7 +1,10 @@
 from flask import Flask, redirect, session, request,copy_current_request_context,url_for
 from flask_socketio import  emit, join_room, leave_room,close_room, rooms, disconnect
 from app import socketio
+from app.main.camera import VideoStreamWidget
 from aylienapiclient import textapi # Sentiment Analysis API
+from threading import Lock
+import cv2
 
 client = textapi.Client("0f213eed", "9202426a61973183055e9041d1333a07")
 
@@ -10,12 +13,37 @@ user_presence = {}
 all_rooms = []
 all_chats = {}
 
-
+# stream = cv2.VideoCapture(0)
+thread = None
+thread_lock = Lock()
 
 all_chats['group'] = []
 all_rooms.append('group')
 
+
+
+def update_video():
+    # while self.started:
+
+    
+    while True:
+        # print('isOpened = '+str(camera.isOpened()))
+        socketio.sleep(10)
+        stream = cv2.VideoCapture(0)
+        (grabbed, frame) = stream.read()
+        print('frame = '+str(frame)+', grabbed = '+str(grabbed))
+
+def background_thread():
+    """Example of how to send server generated events to clients."""
+    count = 0
+    while True:
+        socketio.sleep(10)
+        count += 1
+        # socketio.emit('my_response')
+        print('calling background_thread')
+
 def index():
+    print('called index in chat_events')
     return redirect(url_for('main.index'))
 
 @socketio.on('joined')
@@ -35,6 +63,7 @@ def joined(data):
 
 @socketio.on('connected')
 def connected(data):
+    # cam = VideoStreamWidget()
     session['room'] = 'group'
     print('called connected with room = '+session['room'])
     join_room(session['room'])
