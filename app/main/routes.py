@@ -18,6 +18,8 @@ import jsonpickle
 # from server import cam
 
 cam = None
+current_username = ""
+frames_array = []
 
 @main.route('/')   
 # @main.route('/index',methods=['GET','POST'])
@@ -41,7 +43,9 @@ def login():
     form = LoginForm(request.form)
     if form.validate_on_submit():
         print("form validated")
+        global current_username
         username = form.username.data
+        current_username = username
         session['user'] = username
         session['active_chat'] = 'group'
         password = form.password.data
@@ -115,6 +119,12 @@ def reset_password(token):
         return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
+@socketio.on('connected')
+def connected(data):
+    # cam = VideoStreamWidget()
+    print('connected invoked in routes.py file')
+    socketio.emit('update_video',{'video_arr':frames_array})
+
 def gen_frame():
     """Video streaming generator function."""
     print('before while loop')
@@ -126,7 +136,12 @@ def gen_frame():
         convert = cv2.imencode('.jpg', frame)[1].tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result
+
         time.sleep(0.01)
+
+        frames_array.append({'frame':convert,'user':current_username})
+        socketio.emit('video_frame',{'frame':convert,'user':current_username})
+
 
 
 @main.route('/video_feed')
@@ -135,8 +150,11 @@ def video_feed():
     global cam
     if(cam is None):
         cam = VideoStreamWidget()
+    
     """Video streaming route. Put this in the src attribute of an img tag."""
-    return Response(gen_frame(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    
+    # socketio.emit('video_frame',{'resp':resp})
+    # return resp
 
 

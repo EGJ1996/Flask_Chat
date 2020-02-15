@@ -18,8 +18,8 @@
   <link href="{{url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.6/assets/css/emojione.min.css" />
-  <link href="{{ url_for('static', filename='css/chat_style.css') }}" rel="stylesheet">
-
+  <link rel = "stylesheet" href="{{ url_for('static', filename='css/chat_style.css') }}">
+  <!-- <link rel="stylesheet" href="chat.css" /> -->
   {%- endblock styles %}
 
 
@@ -36,6 +36,8 @@
           "negative" : "🙁",
           "neutral" : "😐"
         }
+        var video_dict = {};
+        var keys = new Array();
         $(document).ready(function(){
             namespace = '';
             // socket_connection = 'http://' + document.domain + ':' + location.port+'/'+namespace;
@@ -121,6 +123,39 @@
               socketio.emit("add_message",{origin:user_name,message:msg,destination:activeChat});
             });
 
+            socketio.on('video_frame',function(data){
+              console.log('Inside video_frame handler');
+              console.log('username = ' + data['user']);
+              frame = data['frame'];
+              console.log('frame = '+frame);
+              var arrayBufferView = new Uint8Array(frame);
+              var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+              var urlCreator = window.URL || window.webkitURL;
+              var imageUrl = urlCreator.createObjectURL(blob);
+              console.log('imageUrl = '+imageUrl);
+              var uname = data['user'];
+              video_dict[uname] = imageUrl;
+
+              if(keys.includes(uname)){
+                $('#'+uname).attr('src',imageUrl);
+              }
+              else{
+                video_content = "";
+                video_content += "<div class='polaroid'><img src='" +imageUrl + "' id='" +uname+"'>";
+                video_content+= "<div class='container'>";
+                video_content+="<p><b>"+ uname +"</b></p></div></div>";
+                console.log('video_content = ');
+                console.log(video_content);
+                $('#video_stream').append(video_content);
+                keys.push(uname);
+              }
+            });
+
+            socketio.on('update_video',function(data){
+              console.log('Invoked update video event');
+              console.log(data);
+            });
+
             socketio.on('update_messages',function(data){
               msgs = data['messages'];
               var i;
@@ -133,7 +168,6 @@
                 console.log(msgs[i])
                 var tmpMsg = '<div class="chip">'+ msgs[i]['origin'] + ': </div>';
                 var sentiment = msgs[i]['sentiment'];
-                // console.log('sentiment = '+sentiment);
                 
                 console.log('printing message = ');
                 console.log(emojione.toImage(msgs[i]['message']));
@@ -200,7 +234,7 @@
 
   </header>
   <main id="app">
-    <img id="bg" src="{{ url_for('main.video_feed') }}">
+    <!-- <img id="bg" src="{{ url_for('main.video_feed') }}"> -->
     <div class="row">
           <div class="col s6">
             <div class="card horizontal">
@@ -257,6 +291,36 @@
         </div>
       </div>
 
+        <div class="col s6">
+          <div class="card horizontal">
+            <div id="video_stream" class="card-content" v-html="chatContent">
+              
+              <div class="polaroid" style="display: none;">
+                <img src="{{url_for('main.video_feed')}}" id="img1">
+                <div class="container">
+                <p>{{current_user}}</p>
+                </div>
+              </div>
+<!-- 
+              <div class="polaroid">
+                <img src="src1" id="video_frame1">
+                <div class="container">
+                <p>{{current_user}}</p>
+                </div>
+              </div> -->
+
+            </div>
+          </div>
+        <div>
+            <div class="input-field col s4">
+              <button class="waves-effect waves-light btn" id="send">
+                <i class="material-icons right">personal_video</i>
+                Video Streaming
+              </button>
+            </div>
+          </div>
+        </div>	
+
       <div class="input-field col s8" style = "display: none;"id="current_user">{{current_user}}</div>
   </main>
   <footer class="page-footer teal darken-3">
@@ -293,11 +357,6 @@
         </div>
       </transition>
     </script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/md5.js"></script>
-  <script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
-  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
 </body>
 {%- endblock html %}
 </html>
