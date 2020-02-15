@@ -15,14 +15,11 @@ import cv2
 import json
 import time
 import jsonpickle
-# from server import cam
 
 cam = None
 current_username = ""
-frames_array = []
 
 @main.route('/')   
-# @main.route('/index',methods=['GET','POST'])
 @main.route('/index')
 @login_required
 def index():
@@ -35,11 +32,8 @@ def index():
                       
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    # if current_user.is_authenticated:
-    #     print("current user is authenticated")
-    #     return redirect(url_for('main.index'))
-    
-    
+    """Function for handling requests to the localhost:5000/login endpoint
+    """
     form = LoginForm(request.form)
     if form.validate_on_submit():
         print("form validated")
@@ -64,12 +58,14 @@ def login():
 
 @main.route('/chat')
 def chat():
-    
-    print('Routing to chat template, users = '+str(users))
+    """Function for handling requests to the localhost:5000/chat endpoint
+    """
     return render_template('chat.html',users = users)
 
 @main.route('/logout')
 def logout():
+    """Function for handling requests to the localhost:5000/logout endpoint
+    """
     logout_user()
     flash('You have logged out now.', category='info')
     return redirect(url_for('main.login'))
@@ -77,6 +73,8 @@ def logout():
 
 @main.route('/register', methods=['GET','POST'])
 def register():
+    """Function for handling requests to the localhost:5000/register endpoint
+    """
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = RegisterForm(request.form)
@@ -94,6 +92,9 @@ def register():
 
 @main.route('/send_reset_password_request', methods=['GET', 'POST'])
 def send_reset_password_request():
+    """Function for handling requests to the localhost:5000/send_reset_password endpoint
+    """
+
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = SendResetPasswordRequestForm(request.form)
@@ -119,14 +120,10 @@ def reset_password(token):
         return redirect(url_for('main.login'))
     return render_template('reset_password.html', form=form)
 
-@socketio.on('connected')
-def connected(data):
-    # cam = VideoStreamWidget()
-    print('connected invoked in routes.py file')
-    socketio.emit('update_video',{'video_arr':frames_array})
 
 def gen_frame():
     """Video streaming generator function."""
+    
     print('before while loop')
     print('cam = '+str(cam))
     while cam:
@@ -139,22 +136,18 @@ def gen_frame():
 
         time.sleep(0.01)
 
-        frames_array.append({'frame':convert,'user':current_username})
         socketio.emit('video_frame',{'frame':convert,'user':current_username})
 
 
 
 @main.route('/video_feed')
 def video_feed():
-    print('Inside video feed')
+    """Video streaming route. Put this in the src attribute of an img tag."""
+
     global cam
     if(cam is None):
         cam = VideoStreamWidget()
     
-    """Video streaming route. Put this in the src attribute of an img tag."""
     return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
-    
-    # socketio.emit('video_frame',{'resp':resp})
-    # return resp
 
 

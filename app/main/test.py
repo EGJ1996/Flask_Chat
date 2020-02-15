@@ -1,12 +1,13 @@
 import unittest
 
 from app import create_app, db, bcrypt
-from app.model import User
+from app.main.model import User
 from config import TestConfig
 
 
 class TestUserLogin(unittest.TestCase):
-
+    """Class for testing the database functionalities
+    """
     def setUp(self):
         self.app = create_app(TestConfig)
         self.app_context = self.app.app_context()

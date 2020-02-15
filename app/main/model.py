@@ -35,10 +35,3 @@ class User(db.Model, UserMixin):
         except:
             return
         return User.query.get(id)
-
-class Message(db.Model):
-    __tablename__ = 'messages'
-    id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.Text)
-    from_user = db.Column(db.Integer,db.ForeignKey('users.id'))
-    to_user = db.Column(db.Integer,db.ForeignKey('users.id'))
