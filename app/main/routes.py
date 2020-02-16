@@ -123,13 +123,8 @@ def reset_password(token):
 
 def gen_frame():
     """Video streaming generator function."""
-    
-    print('before while loop')
-    print('cam = '+str(cam))
     while cam:
-        print('inside while loop of gen_frame')
         frame = cam.read()
-        print('frame in routes = '+str(frame))
         convert = cv2.imencode('.jpg', frame)[1].tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result

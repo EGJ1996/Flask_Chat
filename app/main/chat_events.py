@@ -3,7 +3,6 @@ from flask_socketio import  emit, join_room, leave_room,close_room, rooms, disco
 from app import socketio
 from app.main.camera import VideoStreamWidget
 from aylienapiclient import textapi # Sentiment Analysis API
-from threading import Lock
 import cv2
 
 client = textapi.Client("0f213eed", "9202426a61973183055e9041d1333a07")
@@ -12,9 +11,6 @@ users = []
 user_presence = {}
 all_rooms = []
 all_chats = {}
-
-thread = None
-thread_lock = Lock()
 
 all_chats['group'] = []
 all_rooms.append('group')
@@ -34,6 +30,7 @@ def joined(data):
     if(user_name not in list(user_presence.keys())):
         users.append(user_name)
         user_presence[user_name] = True    
+    
     emit("update_users",{'users':users},room=session['room'])
 
 @socketio.on('connected')

@@ -19,7 +19,6 @@ login.login_message = 'Please log in to access this page.'
 mail = Mail()
 bootstrap = Bootstrap()
 socketio = SocketIO(async_mode=None)
-#print(sys.path)
 
 def create_app(config=Config):
     print("Called create_app inside __init__.py")
