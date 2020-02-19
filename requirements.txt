@@ -1,6 +1,6 @@
 eventlet==0.24.1
 flask_wtf==0.14.3
-opencv-python=='*'
+opencv-python==3.4.9.31
 aylien-apiclient==0.7.0
 bcrypt==3.1.7
 Click==7.0
