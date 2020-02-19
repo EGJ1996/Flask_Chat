@@ -17,7 +17,6 @@ greenlet==0.4.15
 gunicorn==20.0.4
 Jinja2==2.9.6
 keyring==18.0.0
-opencv-python=='*'
 wcwidth==0.1.7
 webassets==0.12.1
 webencodings==0.5.1
