@@ -1,4 +1,4 @@
-opencv-python=='*'
+opencv-python==3.3.0.9
 aylien-apiclient==0.7.0
 bcrypt==3.1.7
 Click==7.0
