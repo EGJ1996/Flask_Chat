@@ -1,5 +1,4 @@
 opencv-python==3.3.0.9
-wtf_forms=='*'
 bcrypt==3.1.7
 cryptography==2.7
 cssmin==0.2.0
