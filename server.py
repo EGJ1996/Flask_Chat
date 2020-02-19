@@ -13,6 +13,6 @@ with app.app_context():
 
 
 if __name__ == '__main__':
-    print("calling main")   
+    print("calling main")
     socketio.run(app,debug=True)
-    app.run(debug=True,threaded=True)         
+    #app.run(debug=True,threaded=True)
