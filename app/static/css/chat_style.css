@@ -107,3 +107,8 @@ div.container {
   text-align: center;
   padding: 5px 10px;
 }
+
+html, body {
+  margin: 0!important;
+  padding: 0!important;
+}

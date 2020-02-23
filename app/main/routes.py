@@ -121,19 +121,6 @@ def reset_password(token):
     return render_template('reset_password.html', form=form)
 
 
-def gen_frame():
-    """Video streaming generator function."""
-    while cam:
-        frame = cam.read()
-        convert = cv2.imencode('.jpg', frame)[1].tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + convert + b'\r\n') # concate frame one by one and show result
-
-        time.sleep(0.01)
-
-        socketio.emit('video_frame',{'frame':convert,'user':current_username})
-
-
 
 @main.route('/video_feed')
 def video_feed():
@@ -143,6 +130,6 @@ def video_feed():
     if(cam is None):
         cam = VideoStreamWidget()
     
-    return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    # return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 

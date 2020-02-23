@@ -25,14 +25,15 @@
     <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>    
     <script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
-    <script src="{{url_for('static',filename='js/app.js')}}"></script>    
+    <script src="{{url_for('static',filename='js/app.js')}}"></script>
+    <script src="{{url_for('static',filename='js/MediaStreamRecorder.js')}}"></script>    
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   {%- endblock head %}
 
 </head>
 
 <body style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;">
 
-  
   <header>
     <nav class="navbar navbar-expand-sm navbar-dark" style="background-color: #274e68;">
       <div class="container">
@@ -100,17 +101,19 @@
           </div>
         </div>
       </div>
-
+      
         <div class="col s6">
           <div class="card horizontal">
             <div id="video_stream" class="card-content" v-html="chatContent">
-              
-              <div class="polaroid" style="display: none;">
-                <img src="{{url_for('main.video_feed')}}" id="img1">
-                <div class="container">
-                <p>{{current_user}}</p>
-                </div>
-              </div>
+              <!-- <video autoplay playsinline id="video1"></video> -->
+              <!-- <div class="polaroid" style="display: none;"> -->
+                <!-- <img src="{{url_for('main.video_feed')}}" id="img1"> -->
+                <!-- <video controls autoplay playsinline></video> -->
+                <!-- <canvas id="canvasOutput"></canvas> -->
+                <!-- <div class="container"> -->
+                <!-- <p>{{current_user}}</p> -->
+                <!-- </div> -->
+              <!-- </div> -->
             </div>
           </div>
         <div>

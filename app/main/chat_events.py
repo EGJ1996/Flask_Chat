@@ -4,6 +4,7 @@ from app import socketio
 from app.main.camera import VideoStreamWidget
 from aylienapiclient import textapi # Sentiment Analysis API
 import cv2
+import base64
 
 client = textapi.Client("0f213eed", "9202426a61973183055e9041d1333a07")
 
@@ -14,7 +15,7 @@ all_chats = {}
 
 all_chats['group'] = []
 all_rooms.append('group')
-
+current_username = ''
 
 
 
@@ -26,7 +27,9 @@ def joined(data):
     """Event handler when the user clicks the join function
     Updates the user list
     """
+    global current_username
     user_name = data['user'][5:]
+    current_username = user_name
     if(user_name not in list(user_presence.keys())):
         users.append(user_name)
         user_presence[user_name] = True    
@@ -97,3 +100,16 @@ def update_chat(data):
             all_rooms.append(session['room'])
 
     emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
+
+@socketio.on('frame_available')
+def frame_available(data):
+    print('caught frame available event')
+    frame = data['frame']
+
+    with open("blobImg.jpeg", "wb") as fh:
+        fh.write(base64.decodebytes(frame))
+
+    print('type of blob received in backend')
+    print(type(frame))
+    print('current_username = '+str(current_username))
+    emit('frame_available',{'frame':frame,'user':current_username})
