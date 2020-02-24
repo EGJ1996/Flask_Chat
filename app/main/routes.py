@@ -24,10 +24,11 @@ current_username = ""
 @login_required
 def index():
     logout_user()
-    print("Inside index")
     return render_template('index.html')
 
-
+@main.route('/home')
+def home():
+    return render_template('index.html')
 
                       
 @main.route('/login', methods=['GET', 'POST'])
@@ -36,7 +37,6 @@ def login():
     """
     form = LoginForm(request.form)
     if form.validate_on_submit():
-        print("form validated")
         global current_username
         username = form.username.data
         current_username = username
@@ -122,13 +122,13 @@ def reset_password(token):
 
 
 
-@main.route('/video_feed')
-def video_feed():
-    """Video streaming route. Put this in the src attribute of an img tag."""
+# @main.route('/video_feed')
+# def video_feed():
+#     """Video streaming route. Put this in the src attribute of an img tag."""
 
-    global cam
-    if(cam is None):
-        cam = VideoStreamWidget()
+#     global cam
+#     if(cam is None):
+#         cam = VideoStreamWidget()
     
     # return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 

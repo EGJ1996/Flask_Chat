@@ -1,10 +1,11 @@
-from flask import Flask, redirect, session, request,copy_current_request_context,url_for
+from flask import current_app,Flask, redirect, session, request,copy_current_request_context,url_for
 from flask_socketio import  emit, join_room, leave_room,close_room, rooms, disconnect
-from app import socketio
+from app import socketio,db
 from app.main.camera import VideoStreamWidget
 from aylienapiclient import textapi # Sentiment Analysis API
 import cv2
 import base64
+from app.main.model import Message
 
 client = textapi.Client("0f213eed", "9202426a61973183055e9041d1333a07")
 
@@ -16,6 +17,7 @@ all_chats = {}
 all_chats['group'] = []
 all_rooms.append('group')
 current_username = ''
+
 
 
 
@@ -45,6 +47,24 @@ def connected(data):
     """
     session['room'] = 'group'
     join_room(session['room'])
+    msgs = Message.query.all()
+    for m in msgs:
+
+        if(m.receiver == 'group'):
+            if('group' not in all_rooms):
+                all_rooms.append('group')
+            all_chats['group'].append({'message':m.message,'origin':m.sender,'sentiment':m.sentiment})
+            
+        else:
+            tmp_arr = [m.sender,m.receiver]
+            tmp_arr.sort()
+            msg_room = ''.join(tmp_arr)
+            if(msg_room not in all_rooms):
+                all_chats[msg_room] = []
+                all_rooms.append(msg_room)
+
+            all_chats[msg_room].append({'message':m.message,'origin':m.sender,'sentiment':m.sentiment})
+
     emit("update_users",{'users':users})
     emit('update_messages',{'messages':all_chats['group']})
 
@@ -57,9 +77,8 @@ def add_message(data):
     and in this case all the users that have joined the chat update their message list
     2. Private message, where only the destination user updates its message list
     """
-    print('add_message invoked with '+str(data))
     sentiment = client.Sentiment({'text': data['message']})
-    print('tone analyzer = ' + sentiment['polarity'])
+    # Retrieve all the messages from the database
 
     if(data['destination'] == 'group'):
         # Case 1: We are writing to the public group
@@ -67,10 +86,13 @@ def add_message(data):
         emit('update_messages',{'messages':all_chats['group']},room='group')
     
     else:
-        # Case 2: 
+        # Case 2:
         all_chats[session['room']].append({'message':data['message'],'origin':data['origin'],'sentiment':sentiment['polarity']})
-        print('room = '+session['room'])
         emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
+
+    message = Message(message = data['message'], sender = data['origin'], receiver = data['destination'], sentiment = sentiment['polarity'])
+    db.session.add(message)
+    db.session.commit()
 
 @socketio.on('update_chat')
 def update_chat(data):
@@ -89,7 +111,6 @@ def update_chat(data):
         tmp_arr = [data['origin'],data['destination']]
         tmp_arr.sort()
         new_room = ''.join(tmp_arr)
-        print('Changing the room to ' + new_room)
 
         if(new_room != session['room']):
             session['room'] = new_room
@@ -98,18 +119,10 @@ def update_chat(data):
         if(session['room'] not in all_rooms):
             all_chats[session['room']] = []
             all_rooms.append(session['room'])
-
+   
     emit('update_messages',{'messages':all_chats[session['room']]},room=session['room'])
 
 @socketio.on('frame_available')
 def frame_available(data):
-    print('caught frame available event')
     frame = data['frame']
-
-    with open("blobImg.jpeg", "wb") as fh:
-        fh.write(base64.decodebytes(frame))
-
-    print('type of blob received in backend')
-    print(type(frame))
-    print('current_username = '+str(current_username))
     emit('frame_available',{'frame':frame,'user':current_username})

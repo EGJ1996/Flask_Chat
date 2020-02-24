@@ -35,3 +35,20 @@ class User(db.Model, UserMixin):
         except:
             return
         return User.query.get(id)
+
+
+class Message(db.Model, UserMixin):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    # message = db.Column(db.String(120), nullable=False) 
+    # sender = db.Column(db.String(120), nullable=False)
+    # receiver = db.Column(db.String(120), nullable=False)
+    message = db.Column(db.String(120)) 
+    sender = db.Column(db.String(120))
+    receiver = db.Column(db.String(120))
+    sentiment = db.Column(db.String(120))
+
+    
+    def __repr__(self):
+        return '<Message {0}-{1}>'.format(self.sender,self.receiver)
+

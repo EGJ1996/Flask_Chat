@@ -40,7 +40,12 @@
         <div class="collapse navbar-collapse" id="nav">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item {% if request.path == url_for('main.index') %}active{% endif %}">
-              <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+              <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item {% if request.path == url_for('main.index') %}active{% endif %}">
+              <a class="nav-link" href="{{ url_for('main.chat') }}">Chat</a>
             </li>
           </ul>
           <ul class="navbar-nav ml-auto">
@@ -105,15 +110,6 @@
         <div class="col s6">
           <div class="card horizontal">
             <div id="video_stream" class="card-content" v-html="chatContent">
-              <!-- <video autoplay playsinline id="video1"></video> -->
-              <!-- <div class="polaroid" style="display: none;"> -->
-                <!-- <img src="{{url_for('main.video_feed')}}" id="img1"> -->
-                <!-- <video controls autoplay playsinline></video> -->
-                <!-- <canvas id="canvasOutput"></canvas> -->
-                <!-- <div class="container"> -->
-                <!-- <p>{{current_user}}</p> -->
-                <!-- </div> -->
-              <!-- </div> -->
             </div>
           </div>
         <div>
